@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:ui_web' as ui_web;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
@@ -23,6 +24,9 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
 
   // Map of textureId -> VideoPlayer instances
   final Map<int, VideoPlayer> _videoPlayers = <int, VideoPlayer>{};
+
+  // Always reuse the same videoElement on iOS (workaround for autoplay)
+  final VideoElement _sharedVideoElement = VideoElement();
 
   // Simulate the native "textureId".
   int _textureCounter = 1;
@@ -73,7 +77,7 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
             'web implementation of video_player cannot play content uri'));
     }
 
-    final VideoElement videoElement = VideoElement()
+    final VideoElement videoElement = (defaultTargetPlatform == TargetPlatform.iOS ? _sharedVideoElement : VideoElement())
       ..id = 'videoElement-$textureId'
       ..src = uri
       ..style.border = 'none'
